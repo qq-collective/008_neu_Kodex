@@ -400,6 +400,12 @@
           旅人よ、何があった……？<br>
           <span style="font-size:14px;opacity:0.7;">今のモヤモヤを、そのまま話してほしい。</span>
         </div>
+        <div style="margin-bottom:16px;">
+          <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;color:var(--gold);opacity:0.7;margin-bottom:6px;">ANTHROPIC API KEY</div>
+          <input type="password" id="api-key-input" placeholder="sk-ant-..."
+            style="width:100%;background:rgba(26,18,8,0.06);border:1px solid rgba(139,105,20,0.4);border-radius:3px;padding:9px 14px;font-family:'Noto Serif JP',serif;font-size:13px;color:var(--ink);outline:none;"
+            oninput="localStorage.setItem('nk_apikey', this.value)">
+        </div>
         <div class="user-input-area">
           <textarea class="user-input" id="moyamoya-input" placeholder="例：チームの会議がいつも噛み合わない気がする…" rows="3"></textarea>
           <button class="send-btn" id="moyamoya-btn" onclick="searchLibrary()">→</button>
@@ -525,7 +531,7 @@
 
 探し物が見つかったのか、
 それとも新しい問いが生まれたのか。
-どちらにせよ、この『Neu Zoltraak』の術式は、
+どちらにせよ、この『Neu Kodex』の術式は、
 いま君の血肉となった。
 
 さあ、その杖を振るがいい。
@@ -556,6 +562,18 @@
 
 <script>
 const ANTHROPIC_API = "https://api.anthropic.com/v1/messages";
+
+// APIキー取得
+function getApiKey() {
+  return document.getElementById('api-key-input')?.value.trim()
+    || localStorage.getItem('nk_apikey') || '';
+}
+
+// 起動時にAPIキーを復元
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('nk_apikey');
+  if (saved) document.getElementById('api-key-input').value = saved;
+});
 
 // qq-collective リポジトリ一覧
 const QQ_REPOS = [
@@ -620,9 +638,16 @@ ${libraryText}
 JSONのみ返してください。前置きや説明は不要です。`;
 
   try {
+    const apiKey = getApiKey();
+    if (!apiKey) { alert('APIキーを入力してください。'); document.getElementById('moyamoya-btn').disabled = false; document.getElementById('library-loading').style.display = 'none'; return; }
     const res = await fetch(ANTHROPIC_API, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 300,
@@ -870,9 +895,15 @@ AIへの指示文は「あなたは〜です。〜してください。」の形
 全体を200〜300字程度にまとめてください。`;
 
   try {
+    const apiKey = getApiKey();
     const res = await fetch(ANTHROPIC_API, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 1000,
